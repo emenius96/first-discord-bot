@@ -17,7 +17,7 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
       adapterCreator: newState.guild.voiceAdapterCreator,
     });
 
-    const resource = createAudioResource(createReadStream('https://drive.google.com/file/d/1AOSd9lzx_GkLIWANJrpvRl4MgJ1ECpwa/view?usp=share_link'), { inputType: StreamType.Arbitrary });
+    const resource = createAudioResource(createReadStream(token.file), { inputType: StreamType.Arbitrary });
     const player = connection.subscribe(resource);
 
     player.on(AudioPlayerStatus.Idle, () => {
@@ -26,4 +26,4 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
   }
 });
 z
-client.login(token);
+client.login(token.token);
