@@ -1,5 +1,5 @@
 const {Client, Events, GatewayIntentBits} = require('discord.js');
-const token = require('./config.json')
+const config = require('./config.json')
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 const { createReadStream } = require('fs');
 const { createAudioResource, AudioPlayerStatus, StreamType, joinVoiceChannel } = require('@discordjs/voice');
@@ -9,7 +9,7 @@ client.once(Events.ClientReady, c => {
 });
 
 client.on('voiceStateUpdate', async (oldState, newState) => {
-  const userId = '147800256468353024'; 
+  const userId = config.targetUser; 
   if (newState.member.user.id === userId && newState.channel) {
     const connection = joinVoiceChannel({
       channelId: newState.channel.id,
@@ -17,7 +17,7 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
       adapterCreator: newState.guild.voiceAdapterCreator,
     });
 
-    const resource = createAudioResource(createReadStream(token.file), { inputType: StreamType.Arbitrary });
+    const resource = createAudioResource(createReadStream(config.audioFile), { inputType: StreamType.Arbitrary });
     const player = connection.subscribe(resource);
 
     player.on(AudioPlayerStatus.Idle, () => {
@@ -26,4 +26,4 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
   }
 });
 z
-client.login(token.token);
+client.login(config.token);
