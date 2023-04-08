@@ -71,7 +71,7 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
   const targetUser = client.users.cache.get(config.targetUser);
     console.log(targetUser);
   // Check if the target user is joining a new voice channel
-  if (newState.member.user.id === targetUser.id && newState.channel) {
+  if (newState.member.user.id === targetUser.id && channel) {
     console.log('target user joined a voice channel');
 
     // Destroy the previous connection if the user was already in a voice channel
