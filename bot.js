@@ -5,48 +5,60 @@ const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBit
 const { createReadStream } = require('fs');
 const { createAudioResource, createAudioPlayer, AudioPlayerStatus, StreamType, joinVoiceChannel, VoiceConnectionStatus } = require('@discordjs/voice');
 
-function connectAndRun(connection, targetUser){
-	let resource =  getRandomAudioResource();
+async function connectAndRun(connection, targetUser){
+	let lastPlayedFile = null;
+	let file = getRandomAudioResource();
 	const player =  createAudioPlayer();
 	const subscription = connection.subscribe(player);
     
-	player.on(AudioPlayerStatus.Idle, () => {
-		if (!resource.ended) {
+    player.on(AudioPlayerStatus.Idle, async () => {
+		if (!file.ended) {
 			return
 		}
-		resource = getRandomAudioResource();
-		player.play(resource);
+		lastPlayedFile = file;
+		file = getRandomAudioResource(lastPlayedFile);
 	});
 
 	connection.on(VoiceConnectionStatus.Disconnected, async () => {
 		subscription.unsubscribe();
+		player.removeAllListeners(AudioPlayerStatus.Idle);
 	});
 
 	connection.on(VoiceConnectionStatus.Destroyed, () => {
 		console.log('Voice connection destroyed');
+		subscription.unsubscribe();
+		player.removeAllListeners(AudioPlayerStatus.Idle);
 	})
     
 	connection.receiver.speaking.on('start', (user) => {
 		if (user === targetUser.id) {
 		console.log(`${targetUser.username} is speaking`);
-		player.play(resource);
+		player.play(file);
 		}
 	});
 
 	connection.receiver.speaking.on('stop', (user) => {
 		if (user === targetUser.id) {
-		console.log(`ready function: ${targetUser.username} stopped speaking`);
+		console.log(`${targetUser.username} stopped speaking`);
 		player.stop();
 		}
 	});
 }
 
-function getRandomAudioResource() {
-	const audioFiles = config.audioFiles;
+function getRandomAudioResource(lastPlayedFile) {
+	let audioFiles = config.audioFiles.filter(path => path !== lastPlayedFile);
+	if (audioFiles.length > 0) {
+		audioFiles = config.audioFiles
+	}
+	
 	const randomIndex = Math.floor(Math.random() * audioFiles.length);
 	const path = audioFiles[randomIndex];
-	const readStream = createReadStream(path);
-	return createAudioResource(readStream, { inputType: StreamType.Arbitrary });
+	try {
+		const readStream = createReadStream(path);
+		return createAudioResource(readStream, { inputType: StreamType.Arbitrary });
+	} catch (err) {
+		console.error(`failed to create audio resource for ${path}`);
+	}
 }
 
 client.once('ready', () => {
@@ -97,4 +109,3 @@ process.on('SIGINT', () => {
 });
 
 client.login(config.token);
-
